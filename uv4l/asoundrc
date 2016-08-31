@@ -1,0 +1,24 @@
+#pcm.equalizer {
+#  type equal;
+#  # Modify the line below if you don't want to use sound card 0
+#  slave.pcm "plughw:0,0";
+#  # or if you want to use with multiple applications output to dmix
+#  # slave.pcm "plug:dmix"
+#}
+
+
+# Usage:
+#  $ alsamixer -D equal
+#  $ aplay -Dplug:equalizer foo.wav
+
+#pcm.!default "plug:equalizer"
+pcm.!default {
+	type asym
+	playback.pcm "plug:hw:0"
+	capture.pcm "plug:hw:1"
+}
+
+#pcm.!default {
+#	type hw
+#	card 1
+#}
