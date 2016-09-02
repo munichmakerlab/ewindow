@@ -1,4 +1,4 @@
 #!/bin/sh
 
-/opt/janus/bin/janus
+exec /opt/janus/bin/janus
 
