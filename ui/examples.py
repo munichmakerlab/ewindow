@@ -17,3 +17,6 @@ sleep(5)
 ui.showText("Fenster wird geoeffnet");
 sleep(5)
 ui.stop()
+ui.showTextVideoOverlay("Klopf..klopf...")
+sleep(5)
+ui.stop()

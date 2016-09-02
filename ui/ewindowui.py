@@ -1,4 +1,4 @@
-import pygame, sys,os
+import pygame, sys,os, subprocess
 from pygame.locals import *
 os.environ['SDL_VIDEO_CENTERED'] = "center"
 
@@ -9,6 +9,7 @@ class eWindowUI:
 	BLACK = (0,0,0)
 
 	screen = None
+	textOverlayProcess = None
 
 	def __init__(self):
 		pygame.init()
@@ -36,6 +37,11 @@ class eWindowUI:
 		self.screen.blit(text, textrect)
 
 		pygame.display.update()
+	def showTextVideoOverlay(self, text):
+		if self.textOverlayProcess:
+			self.textOverlayProcess.terminate()
+
+		self.textOverlayProcess = subprocess.Popen(['/opt/vc/src/hello_pi/hello_font/hello_font.bin',text], cwd="/opt/vc/src/hello_pi/hello_font")
 
 	def showSelectionList(self, title, list):
 		titlefont = pygame.font.SysFont(None, 80)
@@ -67,4 +73,8 @@ class eWindowUI:
 
 	def stop(self):
 		pygame.quit()
-		screen = None
+		self.screen = None
+
+		if self.textOverlayProcess:
+			self.textOverlayProcess.terminate()
+			self.textOverlayProcess = None
