@@ -7,7 +7,8 @@ janus_port = ":8088"
 
 
 def connect_local():
-#  os.system('svc -du /etc/service/janus')
+  os.system('svc -du /etc/service/janus')
+  time.sleep(1)
   connect_remote("localhost")
 
 def connect_remote(janus_address):
