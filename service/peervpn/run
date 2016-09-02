@@ -1,0 +1,3 @@
+#!/bin/sh
+
+./peervpn peervpn-client.conf
