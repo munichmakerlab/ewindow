@@ -93,7 +93,7 @@ int main(int argc, char** argv)
 {
    GRAPHICS_RESOURCE_HANDLE img;
    uint32_t width, height;
-   int LAYER=1;
+   int LAYER=16;
    bcm_host_init();
    int s;
 
