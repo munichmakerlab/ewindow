@@ -1,3 +1,3 @@
 #!/bin/sh
 
-exec uv4l /usr/bin/uv4l -k -f -v 7 --sched-rr --mem-lock --config-file=uv4l-uvc.conf --driver uvc --driver-config-file=uv4l-uvc.conf --server-option=--editable-config-file=uv4l-uvc.conf --device-id 1b71:0056
+exec uv4l /usr/bin/uv4l -k -f -v 7 --sched-rr --mem-lock --config-file=uv4l-uvc.conf --driver uvc --driver-config-file=uv4l-uvc.conf --server-option=--editable-config-file=uv4l-uvc.conf --device-id 046d:0825
