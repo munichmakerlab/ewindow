@@ -2,18 +2,19 @@ import os
 import time
 
 uv4l_address = 'http://localhost:1337/janus'
-local_janus_address = 'localhost:8088'
+
+janus_port = ":8088"
 
 
 def connect_local():
-  os.system('svc -du /etc/service/janus')
-  connect_remote(local_janus_address)
+#  os.system('svc -du /etc/service/janus')
+  connect_remote("localhost")
 
 def connect_remote(janus_address):
   os.system('svc -du /etc/service/uv4l')
 
   time.sleep(1)
-  _launch_uv4l(janus_address)
+  _launch_uv4l("http://" + janus_address + janus_port)
 
 
 def disconnect(caller_data):
@@ -24,6 +25,7 @@ def disconnect(caller_data):
 import requests
 
 def _launch_uv4l(url):
+  print "_launch_uv4l", url
   args = {
     'action' : 'Start',
     'gateway_url' : url,
@@ -41,9 +43,8 @@ def _launch_uv4l(url):
 #    'username' : 'bar',
 #    'token' : '',
   }
-  response = requests.get(local_address, params=args)
+  response = requests.get(uv4l_address, params=args)
+  print response.text
 
-  print response, dir(response)
-  
   if response.status_code != 200 or 'Error' in response.text:
     raise Exception('Unexpected UV4L Error')
