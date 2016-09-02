@@ -1,7 +1,12 @@
 import paho.mqtt.client as paho
 import config
 
-from transitions import Machine
+# from transitions import Machine
+
+import os, sys, inspect
+from transitions import *
+from transitions.extensions import GraphMachine
+from IPython.display import Image, display, display_png
 from threading import Timer
 from time import sleep
 
@@ -21,23 +26,24 @@ topics = []
 
 #(self, source, dest, conditions=None, unless=None, before=None, after=None, prepare=None)
 
-states=['new', 'offline', 'online', 'calling', 'ringing', 'call']
+states=['new', 'offline', 'online', 'calling', 'ringing', 'caller', 'callee']
 
 transitions = [
     { 'trigger': 'initialize', 'source': 'new',     'dest': 'offline',    'prepare': 'init' },
     { 'trigger': 'connect',    'source': 'offline', 'dest': 'online',  'conditions': 'toconnect' },
 
     { 'trigger': 'disconnect', 'source': 'online',  'dest': 'offline', 'before': 'todisconnect' },
-    { 'trigger': 'call',       'source': 'online',  'dest': 'calling',  'conditions': 'tocall'  },
-    # { 'trigger': 'ring',       'source': 'online',  'dest': 'ringing' },
+    { 'trigger': 'ring',       'source': 'online',  'dest': 'ringing', 'after':  'toring' },
 
-    # { 'trigger': 'incall',        'source': 'calling', 'dest': 'call' },
-    # { 'trigger': 'rejected',      'source': 'calling', 'dest': 'online' },
+    { 'trigger': 'caller',   'source': 'calling', 'dest': 'caller' },
+    { 'trigger': 'rejected', 'source': 'caller',  'dest': 'online', 'after':  'torejected' },
+    { 'trigger': 'hangup',   'source': 'caller',  'dest': 'online' },
+    { 'trigger': 'hangup',   'source': 'callee',  'dest': 'online' },
 
-    # { 'trigger': 'incall',        'source': 'ringing', 'dest': 'call' },
-    # { 'trigger': 'reject',        'source': 'ringing', 'dest': 'online' },
+    { 'trigger': 'call',     'source': 'online',  'dest': 'calling',  'conditions': 'tocall'  },
 
-    # { 'trigger': 'hangup',        'source': 'call',    'dest': 'online' }
+    { 'trigger': 'pickup',   'source': 'ringing', 'dest': 'callee' },
+    { 'trigger': 'reject',   'source': 'ringing', 'dest': 'online' },
 ]
 
 def setupCall(client, id):
@@ -59,6 +65,8 @@ def hangupCall(client, id):
 class EWindow(object):
 
     nodes_dict = {}
+    caller = None
+    callee = None
 
     def init(self):
         self.uuid = str(uuid.uuid4())
@@ -104,7 +112,17 @@ class EWindow(object):
         return True
 
     def tocall(self, target):
-        logging.info("Calling %s", target)
+        logging.info("Outgoing call to %s", target)
+        self.callee = target
+
+    def toring(self, target):
+        logging.info("Incoming call from %s", target)
+        self.caller = target
+        # TODO : callback to visualize ring
+
+    def torejected(self):
+        logging.info("Rejecting call from %s", self.callee)
+        self.callee = None
 
     def on_mqttconnect(self, mosq, obj, rc, test):
         logging.info("Connect with RC %s", str(rc))
@@ -144,32 +162,50 @@ class EWindow(object):
         # call interaction
         if len(node) == 2:
             action_node = node[1]
+            caller_data = json.loads(msg.payload)
 
             if action_node == "call":
-                caller_data = json.loads(msg.payload)
-
-                if self.stats == "call"
+                if self.stats == "call":
+                    # TODO : knocking
                     rejectCall(self.mqttc, caller_data.id)
 
-                elif self.stats == "ringing"
+                elif self.stats == "ringing":
+                    # TODO : knocking
                     rejectCall(self.mqttc, caller_data.id)
 
-                elif self.stats == "calling"
+                elif self.stats == "calling":
+                    # TODO : knocking
                     rejectCall(self.mqttc, caller_data.id)
 
-                elif self.stats == "online"
-                    # TODO: klingeln
+                elif self.stats == "caller":
+                    # TODO : knocking
+                    rejectCall(self.mqttc, caller_data.id)
+
+                elif self.stats == "callee":
+                    # TODO : knocking
+                    rejectCall(self.mqttc, caller_data.id)
+
+                elif self.stats == "online":
+                    self.ring(caller_data.id)
                     pass
 
             elif action_node == "answer":
-                # check if I setup a call to the answering id
-                # ignore if not
+                if self.state != "caller":
+                    logger.warning("%s is answering without call request", caller_data.id)
+                    return
 
-                # if reject then cancel call
+                if  self.callee != caller_data.id:
+                    logger.warning("%s is answering without but %s was called", caller_data.id, self.callee)
+                    return
 
-                # if accept and not in call then startup janus
+                if caller_data.action == "reject":
+                    self.rejected()
 
-                # if hangup and in call then close janus
+                elif caller_data.action == "accept":
+                    self.caller()
+
+                elif caller_data.action == "hangup":
+                    self.hangup()
 
 
     def on_mqttlog(self, client, userdata, level, buf):
@@ -186,4 +222,5 @@ client = EWindow()
 
 # Initialize
 machine = Machine(client, states=states, transitions=transitions, initial='new')
+machine.graph.draw('my_state_diagram.png', prog='dot')
 
