@@ -1,5 +1,5 @@
 * Grab and extract Tarballs for Janus and PeerVPN
-* Install uv4l/asoundrc to /etc
+* Install uv4l/asound.conf to /etc
 * Disable uv4l_raspicam and uv4l_uvc in systemd
 * Configure PeerVPN IPs and stuff
 
@@ -37,6 +37,9 @@ apt-get install uv4l-uvc uv4l-webrtc
 
 sudo systemctl disable uv4l_raspicam uv4l_uvc@ # Disable auto-start
 # TODO: This does not seem to work, find out how to stop that shit
+
+
+cp ewindow/uv4l/asoundrc /etc/asoundrc
 
 === Setup Janus
 
